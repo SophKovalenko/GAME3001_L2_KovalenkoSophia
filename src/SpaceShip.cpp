@@ -18,6 +18,8 @@ SpaceShip::SpaceShip()
 	setMaxSpeed(10.0f);
 	setOrientation(glm::vec2(0.0f, -1.0f));
 	setRotation(0.0f);
+	setAccelerationRate(10.0f);
+	setTurnRate(10.0f);
 }
 
 SpaceShip::~SpaceShip()
@@ -110,9 +112,30 @@ void SpaceShip::m_Move()
 	m_targetDirection = Util::normalize(m_targetDirection);
 
 	auto target_rotation = Util::signedAngle(getOrientation(), m_targetDirection);
-	std::cout << "Target Rotation: " << target_rotation << std::endl;
 
-	//getRigidBody()->velocity = m_targetDirection * m_maxSpeed;
+	auto turn_sensitivity = 5.0f;
 
-	//getTransform()->position += getRigidBody()->velocity;
+	if (abs(target_rotation) > turn_sensitivity)
+	{
+		if (target_rotation > 0.0f)
+		{
+			setRotation(getRotation() + getTurnRate());
+		}
+		if (target_rotation < 0.0f)
+		{
+			setRotation(getRotation() - getTurnRate());
+		}
+	}
+	
+	//std::cout << "Target Rotation: " << target_rotation << std::endl;
+
+	getRigidBody()->acceleration = getOrientation() * getAccelerationRate();
+
+	//using the formula pf = pi + vi + 0.5ai*t^2 
+	getRigidBody()->velocity += getOrientation() * (deltaTime)+
+		0.5f * getRigidBody()->acceleration * (deltaTime); // scale our velocity
+
+	getRigidBody()->velocity = Util::clamp(getRigidBody()->velocity, m_maxSpeed);
+
+	getTransform()->position += getRigidBody()->velocity;
 }
