@@ -1,5 +1,5 @@
 #include "SpaceShip.h"
-
+#include "Game.h"
 #include "Util.h"
 
 SpaceShip::SpaceShip()
@@ -88,17 +88,31 @@ float SpaceShip::getRotation() const
 void SpaceShip::setRotation(const float angle)
 {
 	m_rotationAngle = angle;
+
+	const auto offset = -90.0f;
+	const auto angle_in_radians = (angle + offset) * Util::Deg2Rad;
+
+	const auto x = cos(angle_in_radians);
+	const auto y = sin(angle_in_radians);
+
+	//convert the angle to a normalized vector and store it in orientation
+	setOrientation(glm::vec2(x,y));
 }
 
 void SpaceShip::m_Move()
 {
+	auto deltaTime = TheGame::Instance()->getDeltaTime();
+
 	// direction with magnitude
 	m_targetDirection = m_destination - getTransform()->position;
 	
 	// normalized direction
 	m_targetDirection = Util::normalize(m_targetDirection);
 
-	getRigidBody()->velocity = m_targetDirection * m_maxSpeed;
+	auto target_rotation = Util::signedAngle(getOrientation(), m_targetDirection);
+	std::cout << "Target Rotation: " << target_rotation << std::endl;
 
-	getTransform()->position += getRigidBody()->velocity;
+	//getRigidBody()->velocity = m_targetDirection * m_maxSpeed;
+
+	//getTransform()->position += getRigidBody()->velocity;
 }
